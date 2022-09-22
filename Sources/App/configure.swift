@@ -2,6 +2,8 @@ import Fluent
 import FluentPostgresDriver
 import Vapor
 import Redis
+import GraphQLKit
+import GraphiQLVapor
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -38,4 +40,10 @@ public func configure(_ app: Application) throws {
     try routes(app)
 
     try app.autoMigrate().wait()
+    
+    app.register(graphQLSchema: schema, withResolver: Resolver())
+    
+    if !app.environment.isRelease {
+        app.enableGraphiQL()
+    }
 }

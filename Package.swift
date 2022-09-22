@@ -11,7 +11,21 @@ let package = Package(
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.0.0"),
-        .package(url: "https://github.com/vapor/redis.git", from: "4.6.0")
+        .package(url: "https://github.com/vapor/redis.git", from: "4.6.0"),
+        // 🌐 GraphQL
+
+        // Vapor Utilities
+        .package(
+          name: "GraphQLKit",
+          url: "https://github.com/alexsteinerde/graphql-kit.git",
+          from: "2.4.0"
+        ),
+        // Web Query Page
+        .package(
+          name: "GraphiQLVapor",
+          url: "https://github.com/alexsteinerde/graphiql-vapor.git",
+          from: "2.2.0"
+        )
     ],
     targets: [
         .target(
@@ -20,7 +34,9 @@ let package = Package(
                 .product(name: "Fluent", package: "fluent"),
                 .product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
                 .product(name: "Vapor", package: "vapor"),
-                .product(name: "Redis", package: "redis")
+                .product(name: "Redis", package: "redis"),
+                "GraphQLKit",
+                "GraphiQLVapor"
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
