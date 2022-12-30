@@ -2,7 +2,7 @@
 //  File.swift
 //
 //
-//  Created by Robinson Cartagena on 12/05/22.
+//  Created by Robinson Cartagena
 //
 
 import Fluent
@@ -45,4 +45,23 @@ extension User {
     enum v20220520 {
         static let twitterURL = FieldKey(stringLiteral: "twitterURL")
     }
+}
+
+extension User {
+  enum v20221220 {
+    static let rol = FieldKey(stringLiteral: "rol")
+    static let phone = FieldKey(stringLiteral: "phone")
+    static let terminosdelservicio = FieldKey(stringLiteral: "terminosdelservicio")
+    static let codigoconfirmacion = FieldKey(stringLiteral: "codigoconfirmacion")
+    static let phonecountry = FieldKey(stringLiteral: "phonecountry")
+  }
+}
+
+extension User {
+  enum v20221226 {
+    static let birthday = FieldKey(stringLiteral: "birthday")
+    static let gustos = FieldKey(stringLiteral: "gustos")
+    static let address = FieldKey(stringLiteral: "address")
+    static let landline = FieldKey(stringLiteral: "landline")
+  }
 }

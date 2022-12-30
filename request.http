@@ -1,0 +1,20 @@
+get http://localhost:8083/api/users
+
+###
+post http://localhost:8083/api/users HTTP/1.1
+Content-Type: application/json
+
+{
+    "email":"mpogar2009gmail.com",
+    "name":"marta",
+    "username": "marta",
+    "password": "132456",
+}
+###
+post http://localhost:8081/auth/login
+Authorization: Basic marta 132456
+
+###
+post http://localhost:8083/auth/authenticate
+Authorization: Bearer 2F2A8FF8-1A16-4809-B8A9-BCE6BF461A4B
+###

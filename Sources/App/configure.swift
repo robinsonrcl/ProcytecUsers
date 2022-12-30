@@ -4,11 +4,16 @@ import Vapor
 import Redis
 import GraphQLKit
 import GraphiQLVapor
+import SotoS3
 
-// configures your application
 public func configure(_ app: Application) throws {
-    // uncomment to serve files from /Public folder
-    // app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+  
+  app.aws.client = AWSClient(
+                          credentialProvider:
+                              .static( accessKeyId: Environment.get("BUCKET_ACCKEY")!,
+                                       secretAccessKey: Environment.get("BUCKET_SECKEY")!),
+                          httpClientProvider:
+                              .shared(app.http.client.shared))
 
     let port: Int
     if let environmentPort = Environment.get("PORT") {
@@ -17,7 +22,7 @@ public func configure(_ app: Application) throws {
       port = 8081
     }
     app.http.server.configuration.port = port
-    
+
     app.databases.use(.postgres(
       hostname: Environment.get("DATABASE_HOST") ?? "localhost",
       port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:)) ?? PostgresConfiguration.ianaPortNumber,
@@ -27,6 +32,9 @@ public func configure(_ app: Application) throws {
     ), as: .psql)
 
     app.migrations.add(CreateUser())
+    app.migrations.add(AddTwitterURLToUser())
+    app.migrations.add(AddRolAndOthers())
+    app.migrations.add(AddBirthDayAndOthers())
 
     let redisHostname: String
     if let redisEnvironmentHostname = Environment.get("REDIS_HOSTNAME") {
@@ -36,7 +44,6 @@ public func configure(_ app: Application) throws {
     }
     app.redis.configuration = try RedisConfiguration(hostname: redisHostname)
     
-    // register routes
     try routes(app)
 
     try app.autoMigrate().wait()

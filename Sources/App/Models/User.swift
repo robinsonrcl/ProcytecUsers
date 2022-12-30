@@ -36,6 +36,33 @@ final class User: Model, Content {
     
     @OptionalField(key: User.v20220520.twitterURL)
     var twitterURL: String?
+  
+  @Field(key: User.v20221220.terminosdelservicio)
+  var terminosdelservicio: Bool
+  
+  @Field(key: User.v20221220.rol)
+  var rol: String
+  
+  @Field(key: User.v20221220.phonecountry)
+  var phonecountry: String
+  
+  @Field(key: User.v20221220.phone)
+  var phone: String
+  
+  @Field(key: User.v20221220.codigoconfirmacion)
+  var codigoconfirmacion: String
+  
+  @Field(key: User.v20221226.address)
+  var address: String
+  
+  @Field(key: User.v20221226.landline)
+  var landline: String
+  
+  @Field(key: User.v20221226.gustos)
+  var gustos: String
+  
+  @Field(key: User.v20221226.birthday)
+  var birthday: Date
     
     init() {}
     
@@ -46,7 +73,16 @@ final class User: Model, Content {
          siwaIdentifier: String? = nil,
          email: String,
          profilePicture: String? = nil,
-         twitterURL: String? = nil) {
+         twitterURL: String? = nil,
+         terminosdelservicio: Bool = false,
+         rol: String = "usuariofinal",
+         phonecountry: String = "",
+         phone: String = "",
+         codigoconfirmacion: String = "",
+         birthday: Date = Date(rfc1123: "01/01/1900")!,
+         address: String = "",
+         landline: String = "",
+         gustos: String = "") {
         self.name = name
         self.username = username
         self.password = password
@@ -54,17 +90,58 @@ final class User: Model, Content {
         self.email = email
         self.profilePicture = profilePicture
         self.twitterURL = twitterURL
+      self.codigoconfirmacion = codigoconfirmacion
+      self.terminosdelservicio = terminosdelservicio
+      self.phone = phone
+      self.phonecountry = phonecountry
+      self.rol = rol
+      self.gustos = gustos
+      self.address = address
+      self.birthday = birthday
+      self.landline = landline
     }
 
     final class Public: Content {
-        var id: UUID?
-        var name: String
-        var username: String
+      var id: UUID?
+      var name: String
+      var username: String
+      var codigoconfirmacion: String
+      var phone: String
+      var phonecountry: String
+      var rol: String
+      var twitterURL: String
+      var birthday: String
+      var gustos: String
+      var address: String
+      var landline: String
+      var terminosdelservicio: Bool
         
-        init(id: UUID?, name: String, username: String) {
+      init(id: UUID?,
+           name: String,
+           username: String,
+           codigoconfirmacion: String,
+           phone: String,
+           phonecountry: String,
+           rol: String,
+           twitterURL: String,
+           birthday: String,
+           gustos: String,
+           address: String,
+           landline: String,
+           terminosdelservicio: Bool) {
             self.id = id
             self.name = name
             self.username = username
+            self.codigoconfirmacion = codigoconfirmacion
+            self.phone = phone
+            self.phonecountry = phonecountry
+            self.rol = rol
+            self.twitterURL = twitterURL
+            self.birthday = birthday
+            self.gustos = gustos
+            self.address = address
+            self.landline = landline
+        self.terminosdelservicio = terminosdelservicio
         }
     }
     
@@ -88,7 +165,21 @@ final class User: Model, Content {
 
 extension User {
     func convertToPublic() -> User.Public {
-        return User.Public(id: id, name: name, username: username)
+        return User.Public(
+          id: id,
+          name: name,
+          username: username,
+          codigoconfirmacion: codigoconfirmacion,
+          phone: phone,
+          phonecountry: phonecountry,
+          rol: rol,
+          twitterURL: twitterURL!,
+          birthday: birthday.rfc1123,
+          gustos: gustos,
+          address: address,
+          landline: landline,
+          terminosdelservicio: terminosdelservicio
+        )
     }
     
     func convertToPublicV2() -> User.PublicV2 {
