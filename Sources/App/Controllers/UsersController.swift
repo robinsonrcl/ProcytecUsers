@@ -132,7 +132,6 @@ struct UsersController: RouteCollection {
       let user = User.Public(id: idTmp,
                              name: "NA",
                              username: "",
-                             codigoconfirmacion: "",
                              phone: "",
                              phonecountry: "",
                              rol: "",
@@ -183,8 +182,32 @@ struct UsersController: RouteCollection {
   }
 
   func createHandler(_ req: Request) async throws -> User.Public {
-    let user = try req.content.decode(User.self)
-    user.password = try Bcrypt.hash(user.password)
+    let newUser = try req.content.decode(CreateUserData.self)
+            
+    var fechaBirthday = Date()
+    let isoDate = "1900-01-01"
+    let dateFormatter = DateFormatter()
+    dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+    dateFormatter.timeZone = TimeZone.current
+    dateFormatter.dateFormat = "yyyy-MM-dd"
+    
+    if let date = dateFormatter.date(from: isoDate) {
+      fechaBirthday = date
+    }
+    
+    let user = User(
+                  name: newUser.name,
+                  username: newUser.username,
+                  password: try Bcrypt.hash(newUser.password),
+                  email: newUser.email,
+                  twitterURL: newUser.twitterURL,
+                  terminosdelservicio: true,
+                  rol: newUser.rol,
+                  phonecountry: newUser.phonecountry,
+                  phone: newUser.phone,
+                  codigoconfirmacion: "",
+                  birthday: fechaBirthday)
+      
     let code = String(Int.random(in: 100000...999999))
     
     user.codigoconfirmacion = code

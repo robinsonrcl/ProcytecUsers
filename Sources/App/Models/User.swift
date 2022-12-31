@@ -105,7 +105,6 @@ final class User: Model, Content {
       var id: UUID?
       var name: String
       var username: String
-      var codigoconfirmacion: String
       var phone: String
       var phonecountry: String
       var rol: String
@@ -119,7 +118,6 @@ final class User: Model, Content {
       init(id: UUID?,
            name: String,
            username: String,
-           codigoconfirmacion: String,
            phone: String,
            phonecountry: String,
            rol: String,
@@ -132,7 +130,6 @@ final class User: Model, Content {
             self.id = id
             self.name = name
             self.username = username
-            self.codigoconfirmacion = codigoconfirmacion
             self.phone = phone
             self.phonecountry = phonecountry
             self.rol = rol
@@ -169,7 +166,6 @@ extension User {
           id: id,
           name: name,
           username: username,
-          codigoconfirmacion: codigoconfirmacion,
           phone: phone,
           phonecountry: phonecountry,
           rol: rol,
