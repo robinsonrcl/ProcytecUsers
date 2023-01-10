@@ -63,6 +63,9 @@ final class User: Model, Content {
   
   @Field(key: User.v20221226.birthday)
   var birthday: Date
+  
+  @Parent(key: User.v20230107.rolID)
+  var roles: Rol
     
     init() {}
     
@@ -82,7 +85,8 @@ final class User: Model, Content {
          birthday: Date = Date(rfc1123: "01/01/1900")!,
          address: String = "",
          landline: String = "",
-         gustos: String = "") {
+         gustos: String = "",
+         rolID: Rol.IDValue) {
         self.name = name
         self.username = username
         self.password = password
@@ -99,6 +103,7 @@ final class User: Model, Content {
       self.address = address
       self.birthday = birthday
       self.landline = landline
+      self.$roles.id = rolID
     }
 
     final class Public: Content {
@@ -114,6 +119,7 @@ final class User: Model, Content {
       var address: String
       var landline: String
       var terminosdelservicio: Bool
+      var roles: Rol
         
       init(id: UUID?,
            name: String,
@@ -126,7 +132,8 @@ final class User: Model, Content {
            gustos: String,
            address: String,
            landline: String,
-           terminosdelservicio: Bool) {
+           terminosdelservicio: Bool,
+           roles: Rol) {
             self.id = id
             self.name = name
             self.username = username
@@ -139,6 +146,7 @@ final class User: Model, Content {
             self.address = address
             self.landline = landline
         self.terminosdelservicio = terminosdelservicio
+        self.roles = roles
         }
     }
     
@@ -169,12 +177,13 @@ extension User {
           phone: phone,
           phonecountry: phonecountry,
           rol: rol,
-          twitterURL: twitterURL!,
+          twitterURL: twitterURL ?? "",
           birthday: birthday.rfc1123,
           gustos: gustos,
           address: address,
           landline: landline,
-          terminosdelservicio: terminosdelservicio
+          terminosdelservicio: terminosdelservicio,
+          roles: roles
         )
     }
     

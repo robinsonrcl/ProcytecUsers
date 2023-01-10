@@ -154,6 +154,15 @@
       }
     },
     {
+      "identity" : "smtp",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Mikroservices/Smtp.git",
+      "state" : {
+        "revision" : "2b0db0cac3cfede56ed5c90f22e103f44d3faf49",
+        "version" : "3.0.2"
+      }
+    },
+    {
       "identity" : "soto",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/soto-project/soto.git",

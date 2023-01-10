@@ -7,9 +7,9 @@
 
 import Fluent
 
-struct CreateUser: Migration {
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(User.v20220519.schemaName)
+struct CreateUser: AsyncMigration {
+    func prepare(on database: Database) async throws -> Void {
+        try await database.schema(User.v20220519.schemaName)
             .id()
             .field(User.v20220519.name, .string, .required)
             .field(User.v20220519.username, .string, .required)
@@ -22,8 +22,8 @@ struct CreateUser: Migration {
             .create()
     }
     
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema(User.v20220519.schemaName).delete()
+    func revert(on database: Database) async throws -> Void {
+        try await database.schema(User.v20220519.schemaName).delete()
     }
 }
 
@@ -63,5 +63,11 @@ extension User {
     static let gustos = FieldKey(stringLiteral: "gustos")
     static let address = FieldKey(stringLiteral: "address")
     static let landline = FieldKey(stringLiteral: "landline")
+  }
+}
+
+extension User {
+  enum v20230107 {
+    static let rolID = FieldKey(stringLiteral: "rolID")
   }
 }

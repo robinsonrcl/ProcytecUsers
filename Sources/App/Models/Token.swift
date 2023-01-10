@@ -1,20 +1,41 @@
 import Foundation
 import Vapor
+import Fluent
 
-final class Token: Content {
+final class Token: Model, Content {
+  static let schema = "tokens"
+  
+  @ID
   var id: UUID?
-  var tokenString: String
-  var userID: UUID
+  
+  @Field(key: "value")
+  var value: String
+  
+  @Parent(key: "userID")
+  var user: User
 
-  init(tokenString: String, userID: UUID) {
-    self.tokenString = tokenString
-    self.userID = userID
+  init() {}
+  
+  init(id: UUID? = nil, value: String, userID: User.IDValue) {
+    self.id = id
+    self.value = value
+    self.$user.id = userID
   }
 }
 
 extension Token {
   static func generate(for user: User) throws -> Token {
-    let random = [UInt8].random(count: 32)
-    return try Token(tokenString: random.base64, userID: user.requireID())
+    let random = [UInt8].random(count: 32).base64
+    return try Token(value: random, userID: user.requireID())
+  }
+}
+
+extension Token: ModelTokenAuthenticatable {
+  static let valueKey = \Token.$value
+  static let userKey = \Token.$user
+  typealias User = App.User
+  
+  var isValid: Bool {
+    true
   }
 }

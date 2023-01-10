@@ -34,7 +34,7 @@ final class Resolver {
         
         let token = try Token.generate(for: user)
         
-        return req.redis.set(RedisKey(token.tokenString), toJSON: token).transform(to: token)
+        return req.redis.set(RedisKey(token.value), toJSON: token).transform(to: token)
     }
     
 }

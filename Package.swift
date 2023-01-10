@@ -14,7 +14,8 @@ let package = Package(
         .package(url: "https://github.com/vapor/redis.git", from: "4.6.0"),
         .package(url: "https://github.com/soto-project/soto.git", from: "6.3.0"),
         .package(name: "GraphQLKit", url: "https://github.com/alexsteinerde/graphql-kit.git", from: "2.4.0"),
-        .package(name: "GraphiQLVapor", url: "https://github.com/alexsteinerde/graphiql-vapor.git", from: "2.2.0")
+        .package(name: "GraphiQLVapor", url: "https://github.com/alexsteinerde/graphiql-vapor.git", from: "2.2.0"),
+        .package(url: "https://github.com/Mikroservices/Smtp.git", from: "3.0.2")
     ],
     targets: [
         .target(
@@ -27,6 +28,7 @@ let package = Package(
                 .product(name: "SotoS3", package: "soto"),
                 .product(name: "SotoSES", package: "soto"),
                 .product(name: "SotoIAM", package: "soto"),
+                .product(name: "Smtp", package: "Smtp"),
                 "GraphQLKit",
                 "GraphiQLVapor"
             ],

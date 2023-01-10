@@ -27,8 +27,8 @@ let schema = try! Schema<Resolver, Request> {
     
     Type(Token.self) {
         Field("id", at: \.id)
-        Field("tokenString", at: \.tokenString)
-        Field("userID", at: \.userID)
+        Field("tokenString", at: \.value)
+        Field("userID", at: \.user)
     }
     
     Query {
