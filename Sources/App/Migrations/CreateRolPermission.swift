@@ -11,7 +11,7 @@ import Vapor
 
 struct CreateAdminRolPermission: AsyncMigration {
   func prepare(on database: Database) async throws -> Void {
-    let passwordHash: String
+    var passwordHash = ""
     
     //--- Crear permissions y rol
     let permissionAll = Permission(name: "all-all", status: true)
@@ -32,9 +32,10 @@ struct CreateAdminRolPermission: AsyncMigration {
     //---
     
     do {
-      passwordHash = try Bcrypt.hash(Environment.get("PASSWORD_TEMP")!)
+      let pass = Environment.get("PASSWORD_TEMP")
+      passwordHash = try Bcrypt.hash(pass!)
     }catch {
-      return
+      
     }
     
     var fechaBirthday = Date()
@@ -73,12 +74,12 @@ struct CreateAdminRolPermission: AsyncMigration {
       .filter(\.$username == "admin")
       .delete()
     
-    try await Permission.query(on: database)
-      .filter(\.$name ~~ ["all-all","access-crmprincipal"])
-      .delete()
-    
     try await Rol.query(on: database)
       .filter(\.$name ~~ ["Comercial", "Admin"])
+      .delete()
+    
+    try await Permission.query(on: database)
+      .filter(\.$name ~~ ["all-all","access-crmprincipal"])
       .delete()
     
 

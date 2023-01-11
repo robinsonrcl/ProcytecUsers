@@ -103,8 +103,6 @@ struct RolsController: RouteCollection {
   func createRol(_ req: Request) async throws -> Rol {
     let rol = try req.content.decode(Rol.self)
     
-//    let rol = Rol(name: rolSinUUID.name, status: rolSinUUID.status)
-    
     try await rol.save(on: req.db)
     
     return rol
