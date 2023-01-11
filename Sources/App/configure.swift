@@ -44,7 +44,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(AddParentPermission())
     app.migrations.add(CreateToken())
     app.migrations.add(CreateRolPermissionPivot())
-    app.migrations.add(CreateAdminRolPermission())
+//    app.migrations.add(CreateAdminRolPermission())
   
     app.databases.middleware.use(UserMiddleware(), on: .psql)
     app.logger.logLevel = .debug
