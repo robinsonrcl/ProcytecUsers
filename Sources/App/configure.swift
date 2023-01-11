@@ -7,13 +7,10 @@ import GraphiQLVapor
 import SotoS3
 
 public func configure(_ app: Application) throws {
-  
-  app.aws.client = AWSClient(
-                          credentialProvider:
-                              .static( accessKeyId: Environment.get("BUCKET_ACCKEY")!,
-                                       secretAccessKey: Environment.get("BUCKET_SECKEY")!),
-                          httpClientProvider:
-                              .shared(app.http.client.shared))
+    app.aws.client = AWSClient(
+                          credentialProvider: .static( accessKeyId: Environment.get("BUCKET_ACCKEY")!,
+                                                            secretAccessKey: Environment.get("BUCKET_SECKEY")!),
+                          httpClientProvider: .shared(app.http.client.shared))
 
     let port: Int
     if let environmentPort = Environment.get("PORT") {
@@ -31,12 +28,11 @@ public func configure(_ app: Application) throws {
       database: Environment.get("DATABASE_NAME") ?? "vapor_database"
     ), as: .psql)
   
-  // Configuración de Redis
-   let redisHostname = Environment.get("REDIS_HOSTNAME") ?? "localhost"
-   let redisConfig = try RedisConfiguration(hostname: redisHostname)
+    // Configuración de Redis
+    let redisHostname = Environment.get("REDIS_HOSTNAME") ?? "localhost"
+    let redisConfig = try RedisConfiguration(hostname: redisHostname)
 
-   app.redis.configuration = redisConfig
-   //-----
+    app.redis.configuration = redisConfig
 
     app.migrations.add(CreateUser())
     app.migrations.add(AddTwitterURLToUser())
@@ -48,30 +44,15 @@ public func configure(_ app: Application) throws {
     app.migrations.add(AddParentPermission())
     app.migrations.add(CreateToken())
     app.migrations.add(CreateRolPermissionPivot())
-
-
-//    let redisHostname: String
-//    if let redisEnvironmentHostname = Environment.get("REDIS_HOSTNAME") {
-//      redisHostname = redisEnvironmentHostname
-//    } else {
-//      redisHostname = "localhost"
-//    }
-//    app.redis.configuration = try RedisConfiguration(hostname: redisHostname)
+    app.migrations.add(CreateAdminRolPermission())
   
-      app.databases.middleware.use(UserMiddleware(), on: .psql)
-      //app.migrations.add(CreateResetPasswordToken())
-      app.logger.logLevel = .debug
+    app.databases.middleware.use(UserMiddleware(), on: .psql)
+    app.logger.logLevel = .debug
 
     try app.autoMigrate().wait()
   
     app.sessions.use(.redis)
     app.middleware.use(app.sessions.middleware)
-    
-//    app.register(graphQLSchema: schema, withResolver: Resolver())
-    
-//    if !app.environment.isRelease {
-//        app.enableGraphiQL()
-//    }
   
-  try routes(app)
+    try routes(app)
 }
