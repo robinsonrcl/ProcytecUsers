@@ -151,7 +151,7 @@ struct UsersController: RouteCollection {
     
     let phone = ajustarPhone(phone: user.phone, phoneCountry: user.phonecountry)
     
-    _ = try await sendSMS(message: message, phone: phone, req: req)
+    _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
     _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
     
     return HTTPStatus.ok
@@ -258,13 +258,13 @@ struct UsersController: RouteCollection {
   }
 
   func setNewPwd(_ req: Request) async throws -> HTTPStatus {
-    let newpassword = try req.content.decode(newPassword.self)
+    let userNewPassword = try req.content.decode(newPassword.self)
     
-    let updateUser = try await User.query(on: req.db).first()
+    let updateUser = try await User.query(on: req.db).filter(\.$username == userNewPassword.email).first()
     
     if(updateUser != nil){
-      if(updateUser!.password == newpassword.code){
-        updateUser?.password = try Bcrypt.hash(newpassword.password)
+      if(updateUser!.password == userNewPassword.code){
+        updateUser?.password = try Bcrypt.hash(userNewPassword.password)
         
         _ = try await updateUser?.save(on: req.db)
         
@@ -345,7 +345,7 @@ struct UsersController: RouteCollection {
     
     let phone = ajustarPhone(phone: user.phone, phoneCountry: user.phonecountry)
     
-    _ = try await sendSMS(message: message, phone: phone, req: req)
+    _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
     _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
     
     if(userExist != nil){
@@ -389,7 +389,7 @@ struct UsersController: RouteCollection {
       
       let phone = ajustarPhone(phone: user!.phone, phoneCountry: user!.phonecountry)
       
-      _ = try await sendSMS(message: message, phone: phone, req: req)
+      _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
       _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
       
       return HTTPStatus.ok
@@ -570,7 +570,7 @@ struct UsersController: RouteCollection {
     
     let phone = ajustarPhone(phone: user!.phone, phoneCountry: user!.phonecountry)
     
-    _ = try await sendSMS(message: message, phone: phone, req: req)
+    _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
     _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
     
     
