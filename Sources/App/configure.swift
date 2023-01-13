@@ -8,8 +8,8 @@ import SotoS3
 
 public func configure(_ app: Application) throws {
     app.aws.client = AWSClient(
-                          credentialProvider: .static( accessKeyId: Environment.get("BUCKET_ACCKEY")!,
-                                                            secretAccessKey: Environment.get("BUCKET_SECKEY")!),
+                          credentialProvider: .static( accessKeyId: Environment.get("USERAWS_ACCKEY")!,
+                                                            secretAccessKey: Environment.get("USERAWS_SECKEY")!),
                           httpClientProvider: .shared(app.http.client.shared))
 
     let port: Int

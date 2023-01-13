@@ -2,6 +2,7 @@ import Vapor
 import Smtp
 import Fluent
 import SotoSES
+import SotoSNS
 
 struct UsersController: RouteCollection {
   
@@ -128,8 +129,6 @@ struct UsersController: RouteCollection {
   
   func resendCode(_ req: Request) async throws -> HTTPStatus {
     
-    let id = req.parameters.get("userID")
-    
     let user = try await User.find(req.parameters.get("userID"), on: req.db)!
     let code = String(Int.random(in: 100000...999999))
     
@@ -137,19 +136,30 @@ struct UsersController: RouteCollection {
     
     try await user.save(on: req.db)
     
+    let message = "Código confirmación CRM Conecta"
+    
+    let messageHTML = readTemplateEmail(tittle: "Código de confirmación",
+                                        subtittle: "Gestión de usuarios",
+                                        name: user.name,
+                                        body: message,
+                                        code: code)
+    
     let emailData = EmailData(
       address: user.email,
-      subject: "Código confirmación CRM Conecta: \(code)",
-      message: "Por favor utilice este código para confirmar su registro en nuestro CRM Conecta: \(code) ")
+      subject: message,
+      message: messageHTML)
     
-    _ = try await enviarEmail(emailData: emailData, req: req)
+    let phone = ajustarPhone(phone: user.phone, phoneCountry: user.phonecountry)
+    
+    _ = try await sendSMS(message: message, phone: phone, req: req)
+    _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
     
     return HTTPStatus.ok
     
   }
   
   func getValidarEmail(_ req: Request) async throws ->  RespuestaBool {
-    var correo = req.parameters.get("email")!
+    let correo = req.parameters.get("email")!
     
     let usuario = try await User.query(on: req.db)
       .filter(\.$email == correo)
@@ -314,17 +324,29 @@ struct UsersController: RouteCollection {
       
       _ = try await userExist?.save(on: req.db)
     }else{
-      let result = user.save(on: req.db).map {
+      _ = user.save(on: req.db).map {
         user.$roles.load(on: req.db)
       }
     }
     
+    let message = "Código confirmación CRM Conecta"
+    let messageBody = "A continuación encuentra el código generado para la confirmación de su registro en nuestra plataforma."
+    
+    let messageHTML = readTemplateEmail(tittle: "Código de confirmación",
+                                        subtittle: "Gestión de usuarios",
+                                        name: user.name,
+                                        body: messageBody,
+                                        code: code)
+    
     let emailData = EmailData(
       address: user.email,
-      subject: "Código confirmación CRM Conecta: \(code)",
-      message: "Por favor utilice este código para confirmar su registro en nuestro CRM Conecta: \(code) ")
+      subject: message,
+      message: messageHTML)
     
-    _ = try await enviarEmail(emailData: emailData, req: req)
+    let phone = ajustarPhone(phone: user.phone, phoneCountry: user.phonecountry)
+    
+    _ = try await sendSMS(message: message, phone: phone, req: req)
+    _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
     
     if(userExist != nil){
       try await userExist!.$roles.load(on: req.db)
@@ -351,58 +373,254 @@ struct UsersController: RouteCollection {
       
       try await user!.save(on: req.db)
       
+      let message = "Código confirmación CRM Conecta"
+      let messageBody = "A continuación el código de confirmación generado."
+      
+      let messageHTML = readTemplateEmail(tittle: "Código de confirmación",
+                                          subtittle: "Gestión de usuarios",
+                                          name: user!.name,
+                                          body: messageBody,
+                                          code: code)
+      
       let emailData = EmailData(
         address: user!.email,
-        subject: "Código confirmación CRM Conecta: \(code)",
-        message: "Por favor utilice este código para confirmar su registro en nuestro CRM Conecta: \(code) ")
+        subject: message,
+        message: messageHTML)
       
-      _ = try await enviarEmail(emailData: emailData, req: req)
+      let phone = ajustarPhone(phone: user!.phone, phoneCountry: user!.phonecountry)
+      
+      _ = try await sendSMS(message: message, phone: phone, req: req)
+      _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
       
       return HTTPStatus.ok
       
     }
+  
+  func readTemplateEmail(tittle: String, subtittle: String, name: String, body: String, code: String) -> String {
+    var plantilla: String
+    
+    plantilla = "<!doctype html>" +
+    "<html>" +
+    "  <head><title></title>" +
+    "<style>" +
+    "@import url('https://fonts.googleapis.com/css2?family=Arima:wght@100;400&family=Bebas+Neue&family=Edu+NSW+ACT+Foundation:wght@600&family=Edu+SA+Beginner&display=swap');" +
+    ".titleCodigo {" +
+    "  font-weight: 600;" +
+    "  text-align: center;" +
+    "}" +
+    ".codigo {" +
+    "  font-weight: 900;" +
+    "  font-size: 2.5rem;" +
+    "  text-align: center;" +
+    "  border-radius: 5px;" +
+    "  margin: 0px 50px 0px 50px;" +
+    "}" +
+    ".sub {" +
+    "  padding: 20px;" +
+    "  border: 1px;" +
+    "  border-block-color: white;" +
+    "  border-style: double;" +
+    "  display: block;" +
+    "}" +
+    ".logo {" +
+    "  width: 200px;" +
+    "  height: 70px;" +
+    "}" +
+    ".footer1 {" +
+    "  background: rgb(172, 192, 225);" +
+    "  text-align: center;" +
+    "  padding: 5px 0 5px 30px;" +
+    "}" +
+    ".footer2 {" +
+    "  text-align: left;" +
+    "  padding: 5px 0 5px 17px;" +
+    "  display: inline-flex;" +
+    "  font-size: small;" +
+    "}" +
+    ".texto {" +
+    "  font-size: medium;" +
+    "  text-align: justify;" +
+    "  display: block;" +
+    "  padding: 30px 0 30px 0;" +
+    "}" +
+    ".cuerpo {" +
+    "  text-align: left;" +
+    "  padding: 30px;" +
+    "}" +
+    ".name {" +
+    "  font-weight: 700;" +
+    "}" +
+    ".tittle {" +
+    "  font-size: 30px;" +
+    "  background: rgb(172, 192, 225);" +
+    "  width: -webkit-fill-available;" +
+    "  border-radius: 20px 20px 0 0;" +
+    "  padding: 40px 0 0 0;" +
+    "  text-align: center;" +
+    "}" +
+    ".subtittle {" +
+    "  font-size: 12px;" +
+    "  background: rgb(172, 192, 225);" +
+    "  padding: 0 0 40px 0;" +
+    "  text-align: center;" +
+    "}" +
+    ".container {" +
+    "  text-align: center;" +
+    "  background-color: white;" +
+    "  display: flow-root;" +
+    "  position: absolute;" +
+    "  top: 0px;" +
+    "  width: auto;" +
+    "  border-radius: 20px;" +
+    "  height: auto;" +
+    "  margin: 20px;" +
+    "  padding: 0px;" +
+    "}" +
+    ".leyenda2 {" +
+    "  font-size: small;" +
+    "}" +
+    ".leyenda1 {" +
+    " font-size: 22px;" +
+    "}" +
+    "@media (max-width: 420px) and (orientation: portrait) {" +
+    " .footer2 {" +
+    "  text-align: center;" +
+    "  padding: 5px 0 5px 30px;" +
+    "  display: contents;" +
+    "  font-size: small;" +
+    " }" +
+    " .sub {" +
+    "  padding: 5px;" +
+    "  border: 1px;" +
+    "  border-block-color: white;" +
+    "  border-style: double;" +
+    "  text-align: left;" +
+    " }" +
+    " .logo {" +
+    "  width: 200px;" +
+    "  height: 70px;" +
+    " }" +
+    "}" +
+    "</style>" +
+    "  </head>" +
+    "  <body>" +
+    "    <div class='container'>" +
+    "      <div class='tittle'>\(tittle)</div>" +
+    "      <div class='subtittle'>\(subtittle)</div>" +
+    "      <div class='cuerpo'>" +
+    "        <span class='name'>Sr(a) \(name)</span" +
+    "        ><span class='texto'>\(body)</span>" +
+    "        <div class='titleCodigo'>Código</div>" +
+    "        <div class='codigo'>\(code)</div>" +
+    "      </div>" +
+    "      <div class='footer1'>" +
+    "        <img id='imglogo' src='https://procytec.s3.amazonaws.com/procyteclogo.png' style='width: 154px;height: 42px;' alt='Logo' /><br>" +
+    "      <span class='leyenda1'>EXCELENCIA EN EL SERVICIO</span><br/>" +
+    "      <span class='leyenda2'>Somos el mejor aliado estratégico en soluciones integrales de ITO</span>" +
+    "      </div>" +
+    "      <div class='footer2'>" +
+    "        <div class='sub'>" +
+    "          Sede Medellin<br>Calle 34B #66A-44 Oficina 202" +
+    "        </div>" +
+    "        <div class='sub'>Sede Cali<br>Carrera 103 #11-40</div>" +
+    "        <div class='sub'>" +
+    "          <div>PBX 604 2079773 / 313 7182291</div>" +
+    "          <div><a href='www.procytec.com.co'>www.procytec.com.co</a></div>" +
+    "      </div>" +
+    "      </div>" +
+    "    </div>" +
+    "  </body>" +
+    "</html>"
+    
+    plantilla = plantilla.trimmingCharacters(in: .whitespaces)
+    
+    return plantilla
+  }
+  
+
   
   func codeRestorePWD(_ req: Request) async throws -> HTTPStatus {
     
     let correo = req.parameters.get("email")
     
     let user = try await User.query(on: req.db).filter(\.$email == correo!).first()
+    
+    if(user == nil){
+      return HTTPStatus.notFound
+    }
     let code = String(Int.random(in: 100000...999999))
     
     user!.password = code
     
     try await user!.save(on: req.db)
     
+    let message = "Código para asignación de nueva contraseña en CRM Conecta: \(code)"
+    let messageText = "Por favor utilice este código para confirmar la asignación de una nueva contraseña en nuestro CRM Conecta:"
+    
+    let messageHTML = readTemplateEmail(tittle: "Recuperar Contraseña",
+                                        subtittle: "Gestión de usuarios",
+                                        name: user!.name,
+                                        body: messageText,
+                                        code: code)
+    
     let emailData = EmailData(
       address: user!.email,
-      subject: "Código para asignación de nueva contraseña en CRM Conecta: \(code)",
-      message: "Por favor utilice este código para confirmar su asignación de una nueva contraseña en CRM Conecta: \(code) ")
+      subject: message,
+      message: messageHTML)
     
-    _ = try await enviarEmail(emailData: emailData, req: req)
+    let phone = ajustarPhone(phone: user!.phone, phoneCountry: user!.phonecountry)
+    
+    _ = try await sendSMS(message: message, phone: phone, req: req)
+    _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    
     
     return HTTPStatus.ok
     
   }
   
-  func enviarEmail(emailData: EmailData, req: Request) async throws {
-    let email = try! Email(from: EmailAddress(address: "notificacion@procytec.com.co", name: "Notificaciones Procytec"),
+  func ajustarPhone(phone: String, phoneCountry: String) -> String {
+    var phoneC = phoneCountry.replacingOccurrences(of: "(", with: "")
+    phoneC = (phoneC.replacingOccurrences(of: ")", with: ""))
+    let newPhone =  phone.replacingOccurrences(of: "-", with: "")
+    return "\(String(describing: phoneC))\(String(describing: newPhone))"
+  }
+  
+  func sendEmailWithSMTP(emailData: EmailData, req: Request) async throws {
+    let emailFrom = Environment.get("EMAIL_FROM")
+    let emailFromName = Environment.get("EMAIL_FROM_NAME")
+    
+    let email = try! Email(from: EmailAddress(address: emailFrom!, name: emailFromName),
                            to: [EmailAddress(address: emailData.address , name: emailData.address)],
                            subject: emailData.subject,
-                           body: emailData.message)
+                           body: emailData.message,
+                          isBodyHtml: true)
 
     try await req.smtp.send(email)
   }
   
-  func sendEmail(emailData: EmailData, req: Request) async throws {
+  func sendEmailWithSES(emailData: EmailData, req: Request) async throws {
+    let emailFrom = Environment.get("EMAIL_FROM")
+    
     let destination = SES.Destination(toAddresses: [emailData.address])
-    let message = SES.Message(body: .init(text: SES.Content(data: emailData.message)), subject: .init(data: emailData.subject))
-    let sendEmailRequest = SES.SendEmailRequest(destination: destination, message: message, source: "comunicaciones@bitacorafluvial.com")
+    let message = SES.Message(body: .init(text: SES.Content(data: emailData.message)),
+                              subject: .init(data: emailData.subject))
+    let sendEmailRequest = SES.SendEmailRequest(destination: destination,
+                                                message: message,
+                                                source: emailFrom!)
     
     let client = req.aws.client
     let ses = SES(client: client)
     
     _ = try await ses.sendEmail(sendEmailRequest)
     
+  }
+  
+  func sendSMS(message: String, phone: String, req: Request) async throws -> String {
+    let enviar = SNS(client: req.aws.client)
+    let input = SNS.PublishInput(message: message, phoneNumber: phone)
+    let result = try await enviar.publish(input)
+    
+    return result.messageId ?? ""
   }
 }
 
@@ -429,3 +647,4 @@ struct CreateUserData: Content {
 struct ImageUploadData: Content {
   var picture: Data
 }
+

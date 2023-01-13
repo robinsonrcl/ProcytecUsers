@@ -28,6 +28,7 @@ let package = Package(
                 .product(name: "SotoS3", package: "soto"),
                 .product(name: "SotoSES", package: "soto"),
                 .product(name: "SotoIAM", package: "soto"),
+                .product(name: "SotoSNS", package: "soto"),
                 .product(name: "Smtp", package: "Smtp"),
                 "GraphQLKit",
                 "GraphiQLVapor"
