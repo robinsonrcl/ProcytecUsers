@@ -554,7 +554,7 @@ struct UsersController: RouteCollection {
     
     try await user!.save(on: req.db)
     
-    let message = "Código para asignación de nueva contraseña en CRM Conecta: \(code)"
+    let message = "Código para asignación de nueva contraseña en CRM Conecta"
     let messageText = "Por favor utilice este código para confirmar la asignación de una nueva contraseña en nuestro CRM Conecta:"
     
     let messageHTML = readTemplateEmail(tittle: "Recuperar Contraseña",
