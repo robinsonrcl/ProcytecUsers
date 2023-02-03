@@ -7,6 +7,18 @@ import SotoSNS
 struct UsersController: RouteCollection {
   
   let imageFolder = "ProfilePictures/"
+  let appName = Environment.get("APP_NAME")!
+  let appLogo = Environment.get("APP_LOGO")
+  let appTitle = Environment.get("APP_TITLE")
+  let appSubtitle = Environment.get("APP_SUBTITLE")
+  let appLeyenda1 = Environment.get("APP_LEYENDA1")
+  let appLeyenda2 = Environment.get("APP_LEYENDA2")
+  let appLeyenda3 = Environment.get("APP_LEYENDA3")
+  let appLeyenda4 = Environment.get("APP_LEYENDA4")
+  let appLeyenda5 = Environment.get("APP_LEYENDA5")
+  let appLeyenda6 = Environment.get("APP_LEYENDA6")
+  let emailFrom = Environment.get("EMAIL_FROM")
+  let emailFromName = Environment.get("EMAIL_FROM_NAME")
   
   func boot(routes: RoutesBuilder) throws {
       
@@ -103,10 +115,10 @@ struct UsersController: RouteCollection {
   }
   
   func confirmRegister(_ req: Request) async throws -> RespuestaBool {
-    let id = try UUID(req.parameters.require("userID"))!
+    let username = try req.parameters.require("userID")
     let codigo = try req.parameters.require("codigo")
     
-    let user = try await User.find(id, on: req.db)
+    let user = try await User.query(on: req.db).filter(\.$username == username).first()
     
     var respuesta = RespuestaBool()
     
@@ -136,7 +148,7 @@ struct UsersController: RouteCollection {
     
     try await user.save(on: req.db)
     
-    let message = "Código confirmación CRM Conecta"
+    let message = "Código confirmación \(appName)"
     
     let messageHTML = readTemplateEmail(tittle: "Código de confirmación",
                                         subtittle: "Gestión de usuarios",
@@ -151,8 +163,18 @@ struct UsersController: RouteCollection {
     
     let phone = ajustarPhone(phone: user.phone, phoneCountry: user.phonecountry)
     
-    _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
-    _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    let sendCorreoWithSES: Bool = (Environment.get("SEND_EMAIL_WITH_SES") != nil)
+    let sendMessages: Bool = (Environment.get("SEND_SMS") != nil)
+    
+    if(sendMessages){
+      _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
+    }
+    
+    if(sendCorreoWithSES){
+      _ = try await sendEmailWithSES(emailData: emailData, req: req)
+    }else{
+      _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    }
     
     return HTTPStatus.ok
     
@@ -297,7 +319,7 @@ struct UsersController: RouteCollection {
       fechaBirthday = date
     }
     
-    let rol = try await Rol.query(on: req.db).filter(\.$name == "Comercial").first()
+    let rol = try await Rol.query(on: req.db).filter(\.$name == "Usuario Final").first()
     
     let user = User(
                   name: newUser.name,
@@ -329,7 +351,7 @@ struct UsersController: RouteCollection {
       }
     }
     
-    let message = "Código confirmación CRM Conecta"
+    let message = "Código confirmación \(appName)"
     let messageBody = "A continuación encuentra el código generado para la confirmación de su registro en nuestra plataforma."
     
     let messageHTML = readTemplateEmail(tittle: "Código de confirmación",
@@ -345,8 +367,18 @@ struct UsersController: RouteCollection {
     
     let phone = ajustarPhone(phone: user.phone, phoneCountry: user.phonecountry)
     
-    _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
-    _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    let sendCorreoWithSES: Bool = (Environment.get("SEND_EMAIL_WITH_SES")! as NSString).boolValue
+    let sendMessages: Bool = (Environment.get("SEND_SMS")! as NSString).boolValue
+    
+    if(sendMessages){
+      _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
+    }
+    
+    if(sendCorreoWithSES){
+      _ = try await sendEmailWithSES(emailData: emailData, req: req)
+    }else{
+      _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    }
     
     if(userExist != nil){
       try await userExist!.$roles.load(on: req.db)
@@ -373,7 +405,7 @@ struct UsersController: RouteCollection {
       
       try await user!.save(on: req.db)
       
-      let message = "Código confirmación CRM Conecta"
+      let message = "Código confirmación \(appName)"
       let messageBody = "A continuación el código de confirmación generado."
       
       let messageHTML = readTemplateEmail(tittle: "Código de confirmación",
@@ -389,8 +421,18 @@ struct UsersController: RouteCollection {
       
       let phone = ajustarPhone(phone: user!.phone, phoneCountry: user!.phonecountry)
       
-      _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
-      _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+      let sendCorreoWithSES: Bool = (Environment.get("SEND_EMAIL_WITH_SES") != nil)
+      let sendMessages: Bool = (Environment.get("SEND_SMS") != nil)
+      
+      if(sendMessages){
+        _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
+      }
+      
+      if(sendCorreoWithSES){
+        _ = try await sendEmailWithSES(emailData: emailData, req: req)
+      }else{
+        _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+      }
       
       return HTTPStatus.ok
       
@@ -514,19 +556,19 @@ struct UsersController: RouteCollection {
     "        <div class='codigo'>\(code)</div>" +
     "      </div>" +
     "      <div class='footer1'>" +
-    "        <img id='imglogo' src='https://procytec.s3.amazonaws.com/procyteclogo.png' style='width: 154px;height: 42px;' alt='Logo' /><br>" +
-    "      <span class='leyenda1'>EXCELENCIA EN EL SERVICIO</span><br/>" +
-    "      <span class='leyenda2'>Somos el mejor aliado estratégico en soluciones integrales de ITO</span>" +
+    "        <img id='imglogo' src='\(appLogo ?? "")' style='width: 154px;height: 42px;' alt='Logo' /><br>" +
+    "      <span class='leyenda1'>\(appTitle ?? "")</span><br/>" +
+    "      <span class='leyenda2'>\(appSubtitle ?? "")</span>" +
     "      </div>" +
     "      <div class='footer2'>" +
     "        <div class='sub'>" +
-    "          Sede Medellin<br>Calle 34B #66A-44 Oficina 202" +
+    "          \(appLeyenda1 ?? "")<br>\(appLeyenda2 ?? "")" +
     "        </div>" +
-    "        <div class='sub'>Sede Cali<br>Carrera 103 #11-40</div>" +
+    "        <div class='sub'>\(appLeyenda3 ?? "")<br>\(appLeyenda4 ?? "")</div>" +
     "        <div class='sub'>" +
-    "          <div>PBX 604 2079773 / 313 7182291</div>" +
-    "          <div><a href='www.procytec.com.co'>www.procytec.com.co</a></div>" +
-    "      </div>" +
+    "          <div>\(appLeyenda5 ?? "")</div>" +
+    "          <div>\(appLeyenda6 ?? "")</div>" +
+    "       </div>" +
     "      </div>" +
     "    </div>" +
     "  </body>" +
@@ -536,8 +578,6 @@ struct UsersController: RouteCollection {
     
     return plantilla
   }
-  
-
   
   func codeRestorePWD(_ req: Request) async throws -> HTTPStatus {
     
@@ -554,8 +594,8 @@ struct UsersController: RouteCollection {
     
     try await user!.save(on: req.db)
     
-    let message = "Código para asignación de nueva contraseña en CRM Conecta"
-    let messageText = "Por favor utilice este código para confirmar la asignación de una nueva contraseña en nuestro CRM Conecta:"
+    let message = "Código para asignación de nueva contraseña en \(appName)"
+    let messageText = "Por favor utilice este código para confirmar la asignación de una nueva contraseña en \(appName):"
     
     let messageHTML = readTemplateEmail(tittle: "Recuperar Contraseña",
                                         subtittle: "Gestión de usuarios",
@@ -570,9 +610,18 @@ struct UsersController: RouteCollection {
     
     let phone = ajustarPhone(phone: user!.phone, phoneCountry: user!.phonecountry)
     
-    _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
-    _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    let sendCorreoWithSES: Bool = (Environment.get("SEND_EMAIL_WITH_SES") != nil)
+    let sendMessages: Bool = (Environment.get("SEND_SMS") != nil)
     
+    if(sendMessages){
+      _ = try await sendSMS(message: message + ": " + code, phone: phone, req: req)
+    }
+    
+    if(sendCorreoWithSES){
+      _ = try await sendEmailWithSES(emailData: emailData, req: req)
+    }else{
+      _ = try await sendEmailWithSMTP(emailData: emailData, req: req)
+    }
     
     return HTTPStatus.ok
     
@@ -586,9 +635,6 @@ struct UsersController: RouteCollection {
   }
   
   func sendEmailWithSMTP(emailData: EmailData, req: Request) async throws {
-    let emailFrom = Environment.get("EMAIL_FROM")
-    let emailFromName = Environment.get("EMAIL_FROM_NAME")
-    
     let email = try! Email(from: EmailAddress(address: emailFrom!, name: emailFromName),
                            to: [EmailAddress(address: emailData.address , name: emailData.address)],
                            subject: emailData.subject,
@@ -599,11 +645,10 @@ struct UsersController: RouteCollection {
   }
   
   func sendEmailWithSES(emailData: EmailData, req: Request) async throws {
-    let emailFrom = Environment.get("EMAIL_FROM")
-    
     let destination = SES.Destination(toAddresses: [emailData.address])
-    let message = SES.Message(body: .init(text: SES.Content(data: emailData.message)),
-                              subject: .init(data: emailData.subject))
+    let message = SES.Message(body: .init(html: SES.Content(data: emailData.message)),
+                                subject: .init(data: emailData.subject))
+    
     let sendEmailRequest = SES.SendEmailRequest(destination: destination,
                                                 message: message,
                                                 source: emailFrom!)
