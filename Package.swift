@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "ProcytecUsers",
+    name: "ProcytecApiGateway",
     platforms: [
        .macOS(.v12)
     ],

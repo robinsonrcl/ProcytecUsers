@@ -8,7 +8,6 @@
 import Fluent
 import Vapor
 import PostgresNIO
-//import CloudKit
 
 final class User: Model, Content {
     static let schema = User.v20220519.schemaName

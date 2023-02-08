@@ -22,10 +22,10 @@ struct UsersController: RouteCollection {
   
   func boot(routes: RoutesBuilder) throws {
       
-    let usersGroup = routes.grouped("users")
+    let usersGroup = routes.grouped("api","users")
     
     //-------
-    let users = routes.grouped("user")
+    let users = routes.grouped("api","users")
     
     let tokenAuthMiddleware = Token.authenticator()
     let guardAuthMiddleware = User.guardMiddleware()
@@ -203,8 +203,8 @@ struct UsersController: RouteCollection {
     return result
   }
 
-  func getAllHandler(_ req: Request) -> EventLoopFuture<[User.Public]> {
-    User.query(on: req.db).all().convertToPublic()
+  func getAllHandler(_ req: Request) async throws -> [User.Public] {
+    try await User.query(on: req.db).with(\.$roles).all().convertToPublic()
   }
 
   func getUser(_ req: Request) async throws -> User.Public {
